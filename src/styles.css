@@ -132,3 +132,7 @@ code {
     flex-direction: column;
   }
 }
+
+.jsx_textarea {
+  min-height: 120px;
+}

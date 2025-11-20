@@ -407,7 +407,8 @@ export const loadReconciliation = () => {
   const vnodeOldEl = document.getElementById("vnode-old");
   const vnodeNewEl = document.getElementById("vnode-new");
   const patchListEl = document.getElementById("patch-list");
-  const domPreviewEl = document.getElementById("dom-preview");
+  const domPreviewStepEl = document.getElementById("dom-preview-step");
+  const domPreviewFinalEl = document.getElementById("dom-preview-final");
   const playBtn = document.getElementById("play-btn");
   const resetBtn = document.getElementById("reset-btn");
   const stepInfo = document.getElementById("step-info");
@@ -491,13 +492,17 @@ export const loadReconciliation = () => {
   }
 
   function resetDOM() {
-    domPreviewEl.innerHTML = "";
+    // 왼쪽: 단계별 변경사항 영역 - 초기에는 oldVNode로 시작
+    domPreviewStepEl.innerHTML = "";
     currentStep = 0;
 
     if (oldVNode) {
       const oldDom = vdomToDom(oldVNode);
-      domPreviewEl.appendChild(oldDom);
+      domPreviewStepEl.appendChild(oldDom);
     }
+
+    // 오른쪽: 최종 결과 영역 - 초기에는 비워둠
+    domPreviewFinalEl.innerHTML = '<div style="color: #999; text-align: center; padding: 2rem;">재조정을 완료하면 최종 결과가 여기에 표시됩니다</div>';
 
     renderPatchList();
   }
@@ -509,15 +514,31 @@ export const loadReconciliation = () => {
     }
 
     const patch = patches[currentStep];
-    applyPatch(domPreviewEl, patch, oldVNode);
+    // 왼쪽 영역에 단계별로 패치 적용
+    applyPatch(domPreviewStepEl, patch, oldVNode);
 
     currentStep++;
     renderPatchList();
 
     if (currentStep >= patches.length) {
       stepInfo.textContent = `✓ 완료 (${patches.length}/${patches.length})`;
+      // 모든 패치가 완료되면 오른쪽에 최종 결과 표시
+      updateFinalResult();
     } else {
       stepInfo.textContent = `진행 중 (${currentStep}/${patches.length})`;
+    }
+  }
+
+  function updateFinalResult() {
+    // 최종 결과는 newVNode를 렌더링
+    domPreviewFinalEl.innerHTML = "";
+    if (newVNode) {
+      const finalDom = vdomToDom(newVNode);
+      domPreviewFinalEl.appendChild(finalDom);
+      // 최종 결과에 완료 효과 추가
+      domPreviewFinalEl.style.animation = "fadeIn 0.5s ease";
+    } else {
+      domPreviewFinalEl.innerHTML = '<div style="color: #999; text-align: center; padding: 2rem;">결과가 비어있습니다</div>';
     }
   }
 

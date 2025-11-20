@@ -19,6 +19,7 @@ export const ReconciliationPage = withLifecycle(
           <span class="badge">Before</span>
         </h2>
         <textarea
+          class="jsx_textarea"
           id="jsx-old"
           placeholder='<div id="old">이전 내용</div>'
         ></textarea>
@@ -34,6 +35,7 @@ export const ReconciliationPage = withLifecycle(
           <span class="badge">After</span>
         </h2>
         <textarea
+          class="jsx_textarea"
           id="jsx-new"
           placeholder='<div id="new">새로운 내용</div>'
         ></textarea>
@@ -69,12 +71,8 @@ export const ReconciliationPage = withLifecycle(
         <div id="patch-list" style="font-family: monospace; font-size: 0.9rem;"></div>
       </section>
 
-      <!-- DOM 결과 및 애니메이션 -->
+      <!-- DOM 결과 (좌우 분할) -->
       <section class="panel" style="grid-column: 1 / span 2">
-        <h2>
-          DOM Result
-          <span class="badge">Real DOM</span>
-        </h2>
         <div style="margin-bottom: 1rem;">
           <button id="play-btn" style="padding: 0.5rem 1rem; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; font-weight: bold;">
             ▶ 단계별 실행
@@ -84,7 +82,24 @@ export const ReconciliationPage = withLifecycle(
           </button>
           <span id="step-info" style="margin-left: 1rem; color: #666;"></span>
         </div>
-        <div id="dom-preview" style="padding: 1rem; border: 2px solid #e0e0e0; border-radius: 4px; min-height: 100px; background: #fafafa;"></div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <!-- 왼쪽: 중간 단계 변경사항 -->
+          <div>
+            <h3 style="margin: 0 0 0.5rem 0; font-size: 1rem; color: #333;">
+              Step-by-Step Changes
+              <span class="badge" style="font-size: 0.75rem; background: #ff9800;">Live Preview</span>
+            </h3>
+            <div id="dom-preview-step" style="padding: 1rem; border: 2px solid #ff9800; border-radius: 4px; min-height: 150px; background: #fff8e1;"></div>
+          </div>
+          <!-- 오른쪽: 최종 결과 -->
+          <div>
+            <h3 style="margin: 0 0 0.5rem 0; font-size: 1rem; color: #333;">
+              Final Result
+              <span class="badge" style="font-size: 0.75rem; background: #4caf50;">Complete</span>
+            </h3>
+            <div id="dom-preview-final" style="padding: 1rem; border: 2px solid #4caf50; border-radius: 4px; min-height: 150px; background: #f1f8e9;"></div>
+          </div>
+        </div>
       </section>
   `,
     });
