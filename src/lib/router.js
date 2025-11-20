@@ -101,8 +101,17 @@ export class Router {
    */
   push(url) {
     try {
-      // baseUrl이 있으면 자동으로 붙여줌
-      let fullUrl = url.startsWith(this.#baseUrl) ? url : this.#baseUrl + (url.startsWith("/") ? url : "/" + url);
+      let fullUrl;
+
+      // 이미 baseUrl로 시작하는 경우
+      if (url.startsWith(this.#baseUrl)) {
+        fullUrl = url;
+      } else {
+        // baseUrl과 url을 조합할 때 슬래시 중복 방지
+        const cleanBaseUrl = this.#baseUrl.replace(/\/$/, ""); // 끝 슬래시 제거
+        const cleanUrl = url.startsWith("/") ? url : "/" + url; // 시작 슬래시 보장
+        fullUrl = cleanBaseUrl + cleanUrl;
+      }
 
       const prevFullUrl = `${window.location.pathname}${window.location.search}`;
 

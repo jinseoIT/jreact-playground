@@ -17,6 +17,9 @@ const handleGlobalEvents = (e) => {
 
     // 일치하는 요소가 있으면 핸들러 실행
     if (targetElement) {
+      // 기본 동작 방지 (링크 클릭 시 페이지 리로드 방지)
+      e.preventDefault();
+
       try {
         handler(e);
       } catch (error) {
