@@ -10,7 +10,8 @@ export class Router {
   constructor(baseUrl = "") {
     this.#routes = new Map();
     this.#route = null;
-    this.#baseUrl = baseUrl.replace(/\/$/, "");
+    // baseUrl이 있으면 끝에 슬래시를 보장, 없으면 빈 문자열
+    this.#baseUrl = baseUrl ? baseUrl.replace(/\/$/, "") + "/" : "";
 
     window.addEventListener("popstate", () => {
       this.#route = this.findRoute();
@@ -62,7 +63,9 @@ export class Router {
       })
       .replace(/\//g, "\\/");
 
-    const regex = new RegExp(`^${this.#baseUrl}${regexPath}$`);
+    // baseUrl이 있으면 슬래시를 제거한 버전도 매칭
+    const basePattern = this.#baseUrl ? this.#baseUrl.replace(/\/$/, "") : "";
+    const regex = new RegExp(`^${basePattern}${regexPath}$`);
 
     this.#routes.set(path, {
       regex,
@@ -98,7 +101,7 @@ export class Router {
    */
   push(url) {
     try {
-      // baseUrl이 없으면 자동으로 붙여줌
+      // baseUrl이 있으면 자동으로 붙여줌
       let fullUrl = url.startsWith(this.#baseUrl) ? url : this.#baseUrl + (url.startsWith("/") ? url : "/" + url);
 
       const prevFullUrl = `${window.location.pathname}${window.location.search}`;
@@ -119,6 +122,15 @@ export class Router {
    * 라우터 시작
    */
   start() {
+    // baseUrl이 있고 현재 경로가 슬래시 없이 끝나면 슬래시 추가
+    const currentPath = window.location.pathname;
+    const baseWithoutSlash = this.#baseUrl.replace(/\/$/, "");
+
+    if (baseWithoutSlash && currentPath === baseWithoutSlash) {
+      // 슬래시 없이 접근한 경우 슬래시를 추가하여 리다이렉트
+      window.history.replaceState(null, "", this.#baseUrl);
+    }
+
     this.#route = this.findRoute();
     this.#observer.notify();
   }
