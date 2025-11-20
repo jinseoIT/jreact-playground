@@ -92,10 +92,10 @@ export const withLifecycle = ({ onMount, didMount, onUnmount, watches } = {}, pa
     pageState.previous = pageState.current;
     pageState.current = page;
 
-    // 페이지 함수 실행 (DOM 먼저 렌더링)
+    // 페이지 함수 실행 (HTML 문자열 생성)
     const result = page(...args);
 
-    // DOM 렌더링 후 마운트/업데이트
+    // DOM 렌더링 전 마운트 (onMount)
     if (wasNewPage) {
       mount(page);
     } else if (lifecycle.watches) {
@@ -110,6 +110,13 @@ export const withLifecycle = ({ onMount, didMount, onUnmount, watches } = {}, pa
         // deps 업데이트 (이 부분이 중요!)
         lifecycle.deps[index] = Array.isArray(newDeps) ? [...newDeps] : [];
       });
+    }
+
+    // DOM이 실제로 삽입된 후 didMount 실행 (다음 틱)
+    if (wasNewPage && lifecycle.didMount) {
+      setTimeout(() => {
+        didMountPage(page);
+      }, 0);
     }
 
     return result;

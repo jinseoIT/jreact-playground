@@ -48,15 +48,12 @@ function createElement(type, originProps, ...rawChildren) {
 }
 
 // -------------------------------------------------------------------
-// 2. 간단한 렌더러 (VNode -> 실제 DOM)
+// 2. VNode → DOM 변환기
 // -------------------------------------------------------------------
-function render(vnode, container) {
-  container.innerHTML = "";
-  const dom = createDom(vnode);
-  if (dom) container.appendChild(dom);
-}
-
-function createDom(vnode) {
+/**
+ * VNode를 실제 DOM 노드로 변환
+ */
+function vdomToDom(vnode) {
   if (vnode == null) return null;
 
   // 텍스트 노드
@@ -67,14 +64,14 @@ function createDom(vnode) {
   // 함수 컴포넌트 (확장용)
   if (typeof vnode.type === "function") {
     const childVNode = vnode.type(vnode.props || {});
-    return createDom(childVNode);
+    return vdomToDom(childVNode);
   }
 
   // 일반 DOM 요소
   const dom = document.createElement(vnode.type);
-  const { children = [], ...rest } = vnode.props || {};
 
-  Object.entries(rest).forEach(([key, value]) => {
+  // props 적용 (children 제외)
+  Object.entries(vnode.props || {}).forEach(([key, value]) => {
     if (key === "className") {
       dom.className = value;
     } else if (key.startsWith("on") && typeof value === "function") {
@@ -85,12 +82,22 @@ function createDom(vnode) {
     }
   });
 
-  children.forEach((child) => {
-    const childDom = createDom(child);
+  // children 재귀 변환
+  (vnode.children || []).forEach((child) => {
+    const childDom = vdomToDom(child);
     if (childDom) dom.appendChild(childDom);
   });
 
   return dom;
+}
+
+/**
+ * VNode를 컨테이너에 렌더링
+ */
+function renderVNode(vnode, container) {
+  container.innerHTML = "";
+  const dom = vdomToDom(vnode);
+  if (dom) container.appendChild(dom);
 }
 
 // -------------------------------------------------------------------
@@ -214,7 +221,7 @@ export const loadHome = () => {
   const jsxInputEl = document.getElementById("jsx-input");
   const vnodeViewerEl = document.getElementById("vnode-viewer");
   const domPreviewEl = document.getElementById("dom-preview");
-  console.log("jsxInputEl ::", jsxInputEl);
+
   function updateFromInput() {
     const code = jsxInputEl.value.trim();
     if (!code) {
@@ -224,14 +231,39 @@ export const loadHome = () => {
     }
 
     try {
+      // 1. JSX → VNode 파싱
       const vnode = jsxLikeToVNode(code);
+
+      // 2. VNode 구조 표시
       vnodeViewerEl.textContent = JSON.stringify(vnode, replacer, 2);
-      render(vnode, domPreviewEl);
+
+      // 3. VNode → DOM 변환 및 렌더링
+      renderVNode(vnode, domPreviewEl);
     } catch (err) {
       vnodeViewerEl.textContent = `파싱 에러: ${err.message}`;
       domPreviewEl.innerHTML = "";
     }
   }
+
+  // Tab 키로 들여쓰기 지원
+  jsxInputEl.addEventListener("keydown", (e) => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+
+      const start = jsxInputEl.selectionStart;
+      const end = jsxInputEl.selectionEnd;
+      const value = jsxInputEl.value;
+
+      // Tab 문자(2칸 스페이스) 삽입
+      jsxInputEl.value = value.substring(0, start) + "  " + value.substring(end);
+
+      // 커서 위치 조정
+      jsxInputEl.selectionStart = jsxInputEl.selectionEnd = start + 2;
+
+      // 변경 사항 반영
+      updateFromInput();
+    }
+  });
 
   // 초기 예제 값 세팅
   jsxInputEl.value = '<div id="바다" room={"sea"}>바다</div>';
